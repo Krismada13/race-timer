@@ -12,6 +12,8 @@
   const resetBtn = document.getElementById('resetBtn');
   const splitBtn = document.getElementById('splitBtn');
   const fsSplitBtn = document.getElementById('fsSplitBtn');
+  const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+  const pdfHint = document.getElementById('pdfHint');
   const tabCountdown = document.getElementById('tabCountdown');
   const tabStopwatch = document.getElementById('tabStopwatch');
   const timeSetter = document.getElementById('timeSetter');
@@ -116,15 +118,15 @@
       progress = clamp(elapsed / targetMs, 0, 1);
       if(overtime){
         if(!overtimeAlarmed && running){ playAlarm(); overtimeAlarmed = true; }
-        label = running ? 'Waktu habis · overtime' : (accumulatedMs>0 ? 'Jeda · overtime' : 'Siap mulai');
+        label = running ? 'Time up · overtime' : (accumulatedMs>0 ? 'Paused · overtime' : 'Ready');
       } else {
-        label = running ? 'Berjalan' : (accumulatedMs>0 ? 'Jeda' : 'Siap mulai');
+        label = running ? 'Running' : (accumulatedMs>0 ? 'Paused' : 'Ready');
       }
     } else {
       const loopMs = 10*60*1000;
       timeDisplay.textContent = formatHMS(elapsed);
       progress = (elapsed % loopMs) / loopMs;
-      label = running ? 'Berjalan' : (accumulatedMs>0 ? 'Jeda' : 'Siap mulai');
+      label = running ? 'Running' : (accumulatedMs>0 ? 'Paused' : 'Ready');
     }
 
     timeDisplay.classList.toggle('overtime', overtime);
@@ -140,14 +142,27 @@
   function startLoopIfNeeded(){ if(rafId === null){ loop(); } }
   function stopLoop(){ if(rafId !== null){ cancelAnimationFrame(rafId); rafId = null; } }
 
+  function updateDownloadState(){
+    const canDownload = !running && splits.length > 0;
+    downloadPdfBtn.disabled = !canDownload;
+    if(running){
+      pdfHint.textContent = 'Pause the clock to download your splits as a PDF.';
+    } else if(splits.length === 0){
+      pdfHint.textContent = 'Log at least one split to enable the PDF download.';
+    } else {
+      pdfHint.textContent = 'Splits ready — download them as a PDF anytime.';
+    }
+  }
+
   function setControlsForRunning(isRunning){
-    startBtn.textContent = isRunning ? 'Jeda' : (accumulatedMs > 0 ? 'Lanjut' : 'Mulai');
+    startBtn.textContent = isRunning ? 'Pause' : (accumulatedMs > 0 ? 'Resume' : 'Start');
     startBtn.classList.toggle('running', isRunning);
     splitBtn.disabled = !isRunning;
     fsSplitBtn.disabled = !isRunning;
     tabCountdown.disabled = isRunning;
     tabStopwatch.disabled = isRunning;
     [hInput,mInput,sInput,...presetBtns].forEach(el => el.disabled = isRunning || accumulatedMs > 0);
+    updateDownloadState();
   }
 
   function handleStart(){
@@ -209,11 +224,11 @@
   function renderSplits(){
     splitsList.innerHTML = '';
     splitsEmpty.classList.toggle('hidden', splits.length > 0);
-    splitCount.textContent = splits.length + ' split';
+    splitCount.textContent = splits.length + ' split' + (splits.length === 1 ? '' : 's');
     [...splits].reverse().forEach(sp => {
       const li = document.createElement('li');
       const totalLabel = mode === 'countdown'
-        ? (sp.remainingMs >= 0 ? 'sisa ' + formatHMS(sp.remainingMs) : 'lewat ' + formatHMS(Math.abs(sp.remainingMs)))
+        ? (sp.remainingMs >= 0 ? formatHMS(sp.remainingMs) + ' left' : formatHMS(Math.abs(sp.remainingMs)) + ' over')
         : formatHMS(sp.elapsedMs);
       li.innerHTML =
         '<span class="split-n">'+sp.n+'</span>' +
@@ -221,6 +236,7 @@
         '<span class="split-total">'+totalLabel+'</span>';
       splitsList.appendChild(li);
     });
+    updateDownloadState();
   }
 
   function switchMode(newMode){
@@ -292,6 +308,68 @@
       }catch(e){}
     });
   }
+
+  function downloadSplitsPDF(){
+    if(running || splits.length === 0) return;
+    const { jsPDF } = window.jspdf || {};
+    if(!jsPDF){ alert('PDF library did not load — check your internet connection and try again.'); return; }
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 48;
+    let y = 60;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Race Timer — Split Report', marginX, y);
+    y += 22;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(90, 90, 90);
+    const modeLabel = mode === 'countdown' ? 'Countdown' : 'Stopwatch';
+    const targetLabel = mode === 'countdown' ? '  ·  Target: ' + formatHMS(targetMs) : '';
+    doc.text('Mode: ' + modeLabel + targetLabel, marginX, y);
+    y += 14;
+    doc.text('Generated: ' + new Date().toLocaleString(), marginX, y);
+    y += 26;
+
+    doc.setTextColor(20, 20, 20);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('No', marginX, y);
+    doc.text('Split', marginX + 60, y);
+    doc.text('Total', marginX + 220, y);
+    doc.text('Status', marginX + 340, y);
+    y += 8;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(marginX, y, 548, y);
+    y += 16;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    const pageBottom = 780;
+
+    splits.forEach(sp => {
+      if(y > pageBottom){
+        doc.addPage();
+        y = 60;
+      }
+      const totalLabel = mode === 'countdown' ? formatHMS(sp.elapsedMs) : formatHMS(sp.elapsedMs);
+      const statusLabelText = mode === 'countdown'
+        ? (sp.remainingMs >= 0 ? formatHMS(sp.remainingMs) + ' left' : formatHMS(Math.abs(sp.remainingMs)) + ' over')
+        : '—';
+      doc.text(String(sp.n), marginX, y);
+      doc.text('+' + formatHMS(sp.deltaMs), marginX + 60, y);
+      doc.text(totalLabel, marginX + 220, y);
+      doc.text(statusLabelText, marginX + 340, y);
+      y += 20;
+    });
+
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    doc.save('race-timer-splits-' + stamp + '.pdf');
+  }
+
+  downloadPdfBtn.addEventListener('click', downloadSplitsPDF);
 
   // init
   setInputsFromTarget();
