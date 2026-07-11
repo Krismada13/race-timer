@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race Timer — Countdown & Stopwatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+
+    <div class="top-tools">
+      <button class="icon-btn" id="themeBtn" title="Ganti tema" aria-label="Ganti tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+      <button class="icon-btn" id="wakeBtn" title="Layar tetap menyala" aria-label="Layar tetap menyala">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 5v-2M12 21v-2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <h1>Jam Race Berjalan</h1>
+  <p class="subtitle">Atur waktu tempuh, klik jam untuk layar penuh, dan catat split di panel kanan tanpa menghentikan jam utama.</p>
+
+  <div class="layout">
+
+    <section class="stage" id="stage">
+      <div class="stage-head">
+        <div class="mode-tabs">
+          <button data-mode="countdown" class="active" id="tabCountdown">Countdown</button>
+          <button data-mode="stopwatch" id="tabStopwatch">Stopwatch</button>
+        </div>
+        <div class="presets" id="presets">
+          <button data-preset="600">10 mnt</button>
+          <button data-preset="1800">30 mnt</button>
+          <button data-preset="3600">60 mnt</button>
+          <button data-preset="5400">90 mnt</button>
+        </div>
+      </div>
+
+      <div class="fields" id="timeSetter">
+        <div class="field"><label>Jam</label><input type="number" id="hInput" min="0" max="23" value="1"></div>
+        <div class="field"><label>Menit</label><input type="number" id="mInput" min="0" max="59" value="30"></div>
+        <div class="field"><label>Detik</label><input type="number" id="sInput" min="0" max="59" value="0"></div>
+      </div>
+
+      <div class="display-zone" id="displayZone" title="Klik untuk layar penuh">
+        <div class="expand-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
+          Layar penuh
+        </div>
+        <div class="track-wrap">
+          <svg class="track" viewBox="0 0 400 160">
+            <path class="track-bg" d="M80,10 H320 A70,70 0 0 1 320,150 H80 A70,70 0 0 1 80,10 Z"/>
+            <path class="track-fill" id="trackFill" d="M80,10 H320 A70,70 0 0 1 320,150 H80 A70,70 0 0 1 80,10 Z"/>
+            <circle class="runner" id="runner" r="7" cx="80" cy="10"></circle>
+          </svg>
+          <div class="display">
+            <div class="time" id="timeDisplay">01:30:00</div>
+            <div class="status" id="statusLabel">Siap mulai</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="fsSplitBtn" class="fs-split-btn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 3v18"></path><path d="M5 3 19 10 5 17Z"></path></svg>
+        Catat Split
+      </button>
+
+      <div class="stage-controls">
+        <button class="ghost" id="resetBtn">Reset</button>
+        <button class="primary" id="startBtn">Mulai</button>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>Split</h2>
+        <span id="splitCount">0 split</span>
+      </div>
+      <button id="splitBtn" disabled>Catat Split</button>
+      <div class="splits-table-head">
+        <span>No</span><span>Split</span><span style="text-align:right">Total</span>
+      </div>
+      <p class="splits-empty" id="splitsEmpty">Belum ada split. Tekan Mulai di jam utama, lalu tekan Catat Split di sini kapan pun.</p>
+      <ul id="splitsList"></ul>
+    </aside>
+
+  </div>
+
+  <footer>Berjalan langsung di peramban kamu — tidak butuh internet setelah halaman dimuat.</footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
