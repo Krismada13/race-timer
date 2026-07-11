@@ -384,21 +384,27 @@ html[data-theme="light"] .stage-controls .primary{ color:#fff; }
   align-items:center;
   justify-content:center;
   gap:8px;
-  padding:12px 10px;
+  padding:14px 10px;
   border-radius:13px;
-  border:1px solid var(--line);
-  background:var(--panel-soft);
-  color:var(--ink);
+  border:1px solid var(--teal);
+  background:var(--teal-tint);
+  color:var(--teal-dark);
   font-family:var(--font-body);
   font-weight:700;
-  font-size:13.5px;
+  font-size:14.5px;
   cursor:pointer;
   margin-bottom:6px;
   transition:.15s ease;
 }
 #downloadPdfBtn svg{ width:15px; height:15px; }
-#downloadPdfBtn:hover:not(:disabled){ background:var(--teal-tint); border-color:var(--teal); color:var(--teal-dark); }
-#downloadPdfBtn:disabled{ opacity:.4; cursor:not-allowed; }
+#downloadPdfBtn:hover:not(:disabled){ background:var(--teal); color:#fff; }
+#downloadPdfBtn:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+  border-color:var(--line);
+  background:var(--panel-soft);
+  color:var(--ink-soft);
+}
 .pdf-hint{
   font-size:11.5px;
   color:var(--ink-soft);
